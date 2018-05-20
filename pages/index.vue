@@ -1,59 +1,91 @@
 <template>
   <section class="container">
-    <div>
-      <logo/>
-      <h1 class="title">
-        lotto
-      </h1>
-      <h2 class="subtitle">
-        My prime Nuxt.js project
-      </h2>
-      <div class="links">
-        <a href="https://nuxtjs.org/" target="_blank" class="button--green">Documentation</a>
-        <a href="https://github.com/nuxt/nuxt.js" target="_blank" class="button--grey">GitHub</a>
+    <div class="numbers">
+      <div class="columns column-order is-gapless is-multiline has-text-centered">
+        <div class="column"
+          v-for="numbersRow in partitioned" 
+          :key="numbersRow[0]"
+          >
+          <button
+            v-for="number in numbersRow"
+            :key="number"
+            :class="buttonClasses(number)" 
+            @click="toggle(number)"
+            >{{ number }}</button>
+        </div>
       </div>
     </div>
   </section>
 </template>
 
 <script>
-import Logo from '~/components/Logo.vue'
-
+const ALL = 49;
+const TO_SELECT = 6;
 export default {
-  components: {
-    Logo
+  data() {
+    return {
+      numbers: Array.from({ length: ALL }).map((ignore, index) => index + 1),
+      selectedNumbers: []
+    };
+  },
+  computed: {
+    count() {
+      return this.selectedNumbers
+        .map(selected => (selected ? 1 : 0))
+        .reduce((acc, el) => acc + el, 0);
+    },
+    partitioned() {
+      return this.partition(this.numbers, Math.ceil(Math.sqrt(ALL)));
+    }
+  },
+  methods: {
+    partition(array, n) {
+      return array.length
+        ? [array.slice(0, n)].concat(this.partition(array.slice(n), n))
+        : [];
+    },
+    buttonClasses(number) {
+      const isSelected = this.isSelected(number);
+      return {
+        button: true,
+        "is-rounded": true,
+        "is-info": isSelected,
+        "is-selected": isSelected
+      };
+    },
+    isSelected(number) {
+      return this.selectedNumbers.includes(number);
+    },
+    select(number) {
+      this.selectedNumbers = [
+        number,
+        ...this.selectedNumbers.slice(0, TO_SELECT - 1)
+      ];
+    },
+    deselect(number) {
+      this.selectedNumbers = this.selectedNumbers.filter(
+        selected => selected !== number
+      );
+    },
+    toggle(number) {
+      if (this.isSelected(number)) {
+        this.deselect(number);
+      } else {
+        this.select(number);
+      }
+    }
   }
-}
+};
 </script>
 
 <style>
-.container
-{
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
+.numbers .columns {
+  flex-direction: column;
 }
-.title
-{
-  font-family: "Quicksand", "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; /* 1 */
-  display: block;
-  font-weight: 300;
-  font-size: 100px;
-  color: #35495e;
-  letter-spacing: 1px;
-}
-.subtitle
-{
-  font-weight: 300;
-  font-size: 42px;
-  color: #526488;
-  word-spacing: 5px;
-  padding-bottom: 15px;
-}
-.links
-{
-  padding-top: 15px;
+.numbers .button {
+  width: 50px;
+  height: 50px;
+  margin: 2px;
 }
 </style>
+
