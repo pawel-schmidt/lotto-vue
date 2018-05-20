@@ -9,11 +9,23 @@
           <button
             v-for="number in numbersRow"
             :key="number"
-            :class="buttonClasses(number)" 
+            class="button is-rounded"
+            :class="{ 'is-primary': isSelected(number) }" 
             @click="toggle(number)"
             >{{ number }}</button>
         </div>
       </div>
+    </div>
+    <div class="columns is-centered">
+      <div class="column is-half">
+        <progress class="progress is-small is-primary" 
+          :value="count"
+          :max="totalCount"
+          ></progress>
+      </div>
+    </div>
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-half">{{ count }} of {{ totalCount }}</div>
     </div>
   </section>
 </template>
@@ -24,6 +36,7 @@ const TO_SELECT = 6;
 export default {
   data() {
     return {
+      totalCount: TO_SELECT,
       numbers: Array.from({ length: ALL }).map((ignore, index) => index + 1),
       selectedNumbers: []
     };
@@ -43,15 +56,6 @@ export default {
       return array.length
         ? [array.slice(0, n)].concat(this.partition(array.slice(n), n))
         : [];
-    },
-    buttonClasses(number) {
-      const isSelected = this.isSelected(number);
-      return {
-        button: true,
-        "is-rounded": true,
-        "is-info": isSelected,
-        "is-selected": isSelected
-      };
     },
     isSelected(number) {
       return this.selectedNumbers.includes(number);
