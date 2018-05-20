@@ -27,6 +27,54 @@
     <div class="columns is-centered has-text-centered">
       <div class="column is-half">{{ count }} of {{ totalCount }}</div>
     </div>
+    <div class="columns is-centered">
+      <div class="column is-half">
+        <div class="level">
+          <div class="level-left">
+            <div class="level-item">
+              <div class="buttons has-addons">
+                <button class="button" @click="selectRandom">
+                  <span class="icon is-small">
+                    <i class="fa fa-random"></i>
+                  </span>
+                  <span>Random</span>
+                </button>
+                <button class="button" @click="deselectAll">
+                  <span class="icon is-small">
+                    <i class="fa fa-minus-square"></i>
+                  </span>
+                  <span>Deselect All</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="level-right">
+            <div class="level-item">
+              <div class="buttons has-addons">
+                <button class="button">
+                  <span class="icon is-small">
+                    <i class="fa fa-stop"></i>
+                  </span>
+                  <span>Stop</span>
+                </button>
+                <button class="button">
+                  <span class="icon is-small">
+                    <i class="fa fa-pause"></i>
+                  </span>
+                  <span>Pause</span>
+                </button>
+                <button class="button is-primary">
+                  <span class="icon is-small">
+                    <i class="fa fa-play"></i>
+                  </span>
+                  <span>Run</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </section>
 </template>
 
@@ -42,6 +90,9 @@ export default {
     };
   },
   computed: {
+    selectedSorted() {
+      return this.selectedNumbers.slice().sort();
+    },
     count() {
       return this.selectedNumbers
         .map(selected => (selected ? 1 : 0))
@@ -76,6 +127,16 @@ export default {
         this.deselect(number);
       } else {
         this.select(number);
+      }
+    },
+    deselectAll() {
+      this.selectedNumbers = [];
+    },
+    selectRandom() {
+      this.deselectAll();
+      while (this.count < TO_SELECT) {
+        const randomNumber = Math.floor(Math.random() * ALL) + 1;
+        this.select(randomNumber);
       }
     }
   }
