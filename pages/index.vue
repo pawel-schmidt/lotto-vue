@@ -27,6 +27,9 @@
     <div class="columns is-centered has-text-centered">
       <div class="column is-half">{{ count }} of {{ totalCount }}</div>
     </div>
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-half">Your numbers are: {{ selectedSorted.join(", ") }}</div>
+    </div>
     <div class="columns is-centered">
       <div class="column is-half">
         <div class="level">
@@ -91,7 +94,7 @@ export default {
   },
   computed: {
     selectedSorted() {
-      return this.selectedNumbers.slice().sort();
+      return this.selectedNumbers.slice().sort((left, right) => left - right);
     },
     count() {
       return this.selectedNumbers
