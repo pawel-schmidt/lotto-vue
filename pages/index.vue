@@ -44,7 +44,7 @@
                 </button>
                 <button class="button" @click="deselectAll">
                   <span class="icon is-small">
-                    <i class="fa fa-minus-square"></i>
+                    <i class="fa fa-minus-circle"></i>
                   </span>
                   <span>Deselect All</span>
                 </button>
@@ -54,19 +54,19 @@
           <div class="level-right">
             <div class="level-item">
               <div class="buttons has-addons">
-                <button class="button">
+                <button class="button" @click="reset">
                   <span class="icon is-small">
-                    <i class="fa fa-stop"></i>
+                    <i class="fa fa-undo"></i>
                   </span>
-                  <span>Stop</span>
+                  <span>Reset</span>
                 </button>
-                <button class="button">
+                <button v-if="isRunning" class="button is-primary" @click="pause">
                   <span class="icon is-small">
                     <i class="fa fa-pause"></i>
                   </span>
                   <span>Pause</span>
                 </button>
-                <button class="button is-primary">
+                <button v-else class="button is-primary" @click="run">
                   <span class="icon is-small">
                     <i class="fa fa-play"></i>
                   </span>
@@ -89,7 +89,8 @@ export default {
     return {
       totalCount: TO_SELECT,
       numbers: Array.from({ length: ALL }).map((ignore, index) => index + 1),
-      selectedNumbers: []
+      selectedNumbers: [],
+      isRunning: false
     };
   },
   computed: {
@@ -115,6 +116,9 @@ export default {
       return this.selectedNumbers.includes(number);
     },
     select(number) {
+      if (this.selectedNumbers.includes(number)) {
+        return;
+      }
       this.selectedNumbers = [
         number,
         ...this.selectedNumbers.slice(0, TO_SELECT - 1)
@@ -141,6 +145,16 @@ export default {
         const randomNumber = Math.floor(Math.random() * ALL) + 1;
         this.select(randomNumber);
       }
+    },
+    run() {
+      this.isRunning = true;
+      while (this.isRunning) {}
+    },
+    pause() {
+      this.isRunning = false;
+    },
+    reset() {
+      this.pause();
     }
   }
 };
@@ -153,7 +167,7 @@ export default {
 .numbers .button {
   width: 50px;
   height: 50px;
-  margin: 2px;
+  margin: 5px;
 }
 </style>
 
