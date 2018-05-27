@@ -1,6 +1,6 @@
 import _ from "lodash";
 
-class Lotto {
+export class Lotto {
   constructor(min = 1, max = 49, numbersCount = 6) {
     this.min = min;
     this.max = max;
@@ -8,12 +8,8 @@ class Lotto {
     this.numbers = _.range(min, max + 1);
   }
 
-  static isHit(number, selectedNumbers) {
-    return selectedNumbers.includes(number);
-  }
-
   drawNumbers(count = this.numbersCount) {
-    return _.shuffle(this.numbers).slice(0, count);
+    return _.sampleSize(this.numbers, count);
   }
 
   * generator(iterationCount = Infinity) {
@@ -23,32 +19,39 @@ class Lotto {
   }
 }
 
-class Draw {
+export class Draw {
   constructor(numbers, iteration) {
     this.numbers = numbers;
     this.iteration = iteration;
   }
+
+  hitNumbers(selectedNumbers) {
+    return _.intersection(this.numbers, selectedNumbers);
+  }
+
+  missedNumbers(selectedNumbers) {
+    return _.difference(this.numbers, selectedNumbers);
+  }
 }
 
-class Stats {
-  constructor(selectedNumbers, hits) {
+export class Stats {
+  constructor(selectedNumbers, draws) {
     this.selectedNumbers = selectedNumbers;
-    this.hits = hits;
-    this.hitsGrouppedByHits = _.groupBy(hits, hit => _.intersection(hit.numbers, selectedNumbers).length);
+    this.draws = draws;
+    this.drawsGrouppedByHitsCounts = _.groupBy(draws, draw => draw.hitNumbers(selectedNumbers).length);
   }
 
   hitsCounts() {
-    return this.hitsGrouppedByHits.map(hits => hits.length);
+    return _.mapValues(this.drawsGrouppedByHitsCounts, draw => draw.length);
   }
 
-  asdf() {
-    this.hit = _.intersection(numbers, this.selectedNumbers);
-    this.missed = _.difference(numbers, this.selectedNumbers);
-    // return this.hits.;
+  numberHitsCount() {
+    const hitNumbers = _.flatten(this.draws.map(draw => draw.hitNumbers(this.selectedNumbers)));
+    return _.countBy(hitNumbers);
   }
 
-  firstIterations() {
-    // const
+  iterationsOfFirstHits() {
+    return _.mapValues(this.drawsGrouppedByHitsCounts, draws => _.minBy(draws, draw => draw.iteration));
   }
 }
 
@@ -61,31 +64,36 @@ export default class LottoSimulation {
     this.max = max;
     this.numbersCount = numbersCount;
     this.lotto = new Lotto(min, max, numbersCount);
-    this.lottoGenerator = lotto.generator;
     this.reset(); // isRunning, hitDraws, iteration
   }
 
-  getStats() {
-    return new Stats(this.hitDraws);
+  getStats(selectedNumbers) {
+    return new Stats(selectedNumbers, this.hitDraws);
   }
 
-  start(selectedNumbers = this.lotto.drawNumbers(), onNext = (numbers, iteration) => undefined, onStop = (stats) => undefined) {
+  start(selectedNumbers = this.lotto.drawNumbers(), onNext = (numbers, iteration) => undefined, onStop = (stats) => undefined, iterationCount = Infinity) {
     this.isRunning = true;
+    const generator = this.lotto.generator(iterationCount);
+    const isHit = (number) => selectedNumbers.includes(number);
     do {
       this.iteration++;
-      const numbers = this.generator.next();
+      const next = generator.next();
+      if (next.done) {
+        break;
+      }
+      const numbers = next.value;
       onNext(numbers, this.iteration);
 
-      if (selectedNumbers.some(Lotto.isHit)) {
+      if (numbers.some(isHit)) {
         const hitDraw = new Draw(numbers, this.iteration);
         this.hitDraws.push(hitDraw);
 
-        if (endOnHitAll && selectedNumbers.every(Lotto.isHit)) {
+        if (this.endOnHitAll && numbers.every(isHit)) {
           stop();
         }
       }
     } while (this.isRunning);
-    onStop(this.getStats());
+    onStop(this.getStats(selectedNumbers));
   }
 
   stop() {
@@ -94,7 +102,7 @@ export default class LottoSimulation {
 
   reset() {
     this.stop();
-    this.hitDraws = Array(this.numbersCount);
+    this.hitDraws = [];
     this.iteration = 0;
   }
 }

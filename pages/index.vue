@@ -78,22 +78,56 @@
         </div>
       </div>
     </div>
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-half">Number of iteration: {{ iteration }}</div>
+    </div>
+    <div class="columns is-centered has-text-centered">
+      <div class="column">
+        <ul>
+          <li v-for="(value, key) in stats.hitsCounts()" :key="key">
+            {{ key }} hits of {{ totalCount }} has been drawn {{ value }} times.
+          </li>
+        </ul>
+        <ul>
+          <li v-for="(value, key) in stats.numberHitsCount()" :key="key">
+            Number {{ key }} has been drawn {{ value }} times.
+          </li>
+        </ul>
+        <ul>
+          <li v-for="(value, key) in stats.iterationsOfFirstHits()" :key="key">
+            Your first hit of {{ key }} numbers has been made in {{ value }} round.
+          </li>
+        </ul>
+      </div>
+    </div>
   </section>
 </template>
 
 <script>
+import _ from "lodash";
+
+import LottoSimulation from "~/utils/LottoSimulation";
+import { Draw, Stats } from "~/utils/LottoSimulation";
+
 const ALL = 49;
 const TO_SELECT = 6;
+
 export default {
   data() {
     return {
       totalCount: TO_SELECT,
-      numbers: Array.from({ length: ALL }).map((ignore, index) => index + 1),
+      numbers: _.range(1, ALL + 1),
       selectedNumbers: [],
-      isRunning: false
+      lottoSimulation: new LottoSimulation(),
+      iteration: 0,
+      stats: new Stats([], [])
     };
   },
+
   computed: {
+    isRunning() {
+      return this.lottoSimulation.isRunning;
+    },
     selectedSorted() {
       return this.selectedNumbers.slice().sort((left, right) => left - right);
     },
@@ -103,15 +137,11 @@ export default {
         .reduce((acc, el) => acc + el, 0);
     },
     partitioned() {
-      return this.partition(this.numbers, Math.ceil(Math.sqrt(ALL)));
+      return _.chunk(this.numbers, Math.ceil(Math.sqrt(ALL)));
     }
   },
+
   methods: {
-    partition(array, n) {
-      return array.length
-        ? [array.slice(0, n)].concat(this.partition(array.slice(n), n))
-        : [];
-    },
     isSelected(number) {
       return this.selectedNumbers.includes(number);
     },
@@ -147,14 +177,21 @@ export default {
       }
     },
     run() {
-      this.isRunning = true;
-      while (this.isRunning) {}
+      this.lottoSimulation.reset();
+      const onNext = (numbers, iteration) => {
+        this.iteration = iteration;
+      };
+      const onStop = stats => {
+        this.pause();
+        this.stats = stats;
+      };
+      this.lottoSimulation.start(this.selectedNumbers, onNext, onStop, 100000);
     },
     pause() {
-      this.isRunning = false;
+      this.lottoSimulation.stop();
     },
     reset() {
-      this.pause();
+      this.lottoSimulation.reset();
     }
   }
 };
@@ -167,7 +204,7 @@ export default {
 .numbers .button {
   width: 50px;
   height: 50px;
-  margin: 5px;
+  margin: 2px;
 }
 </style>
 
