@@ -51,7 +51,7 @@ export class Stats {
   }
 
   iterationsOfFirstHits() {
-    return _.mapValues(this.drawsGrouppedByHitsCounts, draws => _.minBy(draws, draw => draw.iteration));
+    return _.mapValues(this.drawsGrouppedByHitsCounts, draws => _.minBy(draws, draw => draw.iteration).iteration);
   }
 }
 
